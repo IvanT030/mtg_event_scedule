@@ -1,11 +1,14 @@
-2026-11-17 13:02:26,332 INFO === scraping cardmaster.tw ===
-2026-11-17 13:02:32,944 INFO [cardmaster.tw] page html: 86 json blobs, 2 mention post_id
-2026-11-17 13:03:12,207 INFO [cardmaster.tw] browser session: 391 bodies, 1 posts
-2026-11-17 13:03:12,207 INFO [cardmaster.tw] timeline doc_id=29912369648355740 id=100063830777192
-2026-11-17 13:03:12,409 WARNING [cardmaster.tw] api error: {"errors":[{"message":"Rate limit exceeded","severity":"CRITICAL","code":1675004}],"extensions":{"is_final":true}}
-2026-11-17 13:03:24,504 INFO [cardmaster.tw] photos tab: 82 photo ids
-2026-11-17 13:03:31,928 INFO [cardmaster.tw] photo 1/25 fbid=1663681822436161 time=None img=False text=''
-2026-11-17 13:03:31,928 INFO [cardmaster.tw] photo page is login-walled; stopping photos step
-2026-11-17 13:03:31,979 INFO [cardmaster.tw] done: 0 new, 1 total
-2026-11-17 13:03:31,979 INFO    2026-11-17T19:48:07+08:00 | imgs=1 | #就在這週六  １１／２１～ REVOLUTION BOOSTER 02奪盒賽 時間：１１／２１（六），１４:００開始報
-2026-11-17 13:03:31,979 INFO ALL DONE: 0 new posts across 1 pages
+2026-11-17 13:30:10,825 INFO === scraping cardmaster.tw ===
+2026-11-17 13:30:18,441 INFO [cardmaster.tw] page html: 86 json blobs, 2 mention post_id
+2026-11-17 13:30:57,768 INFO [cardmaster.tw] browser session: 256 bodies, 4 posts
+2026-11-17 13:30:57,768 INFO [cardmaster.tw] timeline doc_id=29912369648355740 id=100063830777192
+2026-11-17 13:30:58,096 WARNING [cardmaster.tw] api error: {"errors":[{"message":"Rate limit exceeded","severity":"CRITICAL","code":1675004}],"extensions":{"is_final":true}}
+2026-11-17 13:31:10,516 INFO [cardmaster.tw] photos tab: 82 photo ids
+2026-11-17 13:31:18,373 INFO [cardmaster.tw] photo 1/25 fbid=1663681822436161 time=None img=False text=''
+2026-11-17 13:31:18,373 INFO [cardmaster.tw] photo page is login-walled; stopping photos step
+2026-11-17 13:31:19,817 INFO [cardmaster.tw] done: 3 new, 4 total
+2026-11-17 13:31:19,817 INFO    2026-11-17T19:48:07+08:00 | imgs=1 | #就在這週六  １１／２１～ REVOLUTION BOOSTER 02奪盒賽 時間：１１／２１（六），１４:００開始報
+2026-11-17 13:31:19,817 INFO    2026-11-17T18:52:44+08:00 | imgs=1 | 要開戰啦!! 《Marvel Hero Rush》將於 12 月 5 日（六）首次於台灣舉辦官方賽事「Marvel He
+2026-11-17 13:31:19,817 INFO    2026-11-17T15:25:40+08:00 | imgs=5 | 英文版寶可夢「#DeltaReign」產品到貨 部份商品數量有限 最近也新增不少舊系列卡包零售 挖寶還不手刀來看看（？）
+2026-11-17 13:31:19,817 INFO    2026-11-16T12:57:44+08:00 | imgs=4 | 【SVE、VG 賽事回顧】 依舊感謝大家的參與~ VG與SVE 周賽順利結束~ 這個月的SVE台灣決賽資格賽 恭喜由荒野
+2026-11-17 13:31:19,818 INFO ALL DONE: 3 new posts across 1 pages
