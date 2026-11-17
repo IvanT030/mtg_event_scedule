@@ -274,6 +274,108 @@ def dismiss_login(page):
         pass
 
 
+# ── photos step: open each photo page (server-rendered, not rate-limited) ───
+
+def find_photo_post(obj, fbid: str):
+    """From a photo page's JSON blobs, pull caption, time and full image."""
+    text = creation = img = None
+    owner_post = None
+    for path, k, v in walk(obj):
+        if text is None and k == "message" and isinstance(v, dict) and isinstance(v.get("text"), str):
+            text = v["text"]
+        elif creation is None and k in ("created_time", "creation_time") and isinstance(v, int):
+            creation = v
+        elif img is None and k == "image" and isinstance(v, dict) and "fbcdn" in str(v.get("uri", "")) \
+                and (v.get("width") or 0) >= 400:
+            img = v["uri"]
+        elif owner_post is None and k == "post_id" and isinstance(v, str):
+            owner_post = v
+    return text, creation, img, owner_post
+
+
+def scrape_photos(slug: str, max_photos: int, days: int) -> dict:
+    from playwright.sync_api import sync_playwright
+
+    posts = {}
+    cutoff = time.time() - days * 86400
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True, args=["--disable-blink-features=AutomationControlled"])
+        ctx = browser.new_context(
+            locale="zh-TW", viewport={"width": 1280, "height": 900},
+            user_agent=("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                        "(KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"),
+        )
+        page = ctx.new_page()
+        try:
+            page.goto(f"https://www.facebook.com/{slug}/photos", timeout=60000, wait_until="domcontentloaded")
+            time.sleep(3)
+            dismiss_login(page)
+            for _ in range(6):
+                page.mouse.wheel(0, 2500)
+                time.sleep(1.2)
+            html = page.content()
+            fbids = []
+            for m in re.finditer(r"(?:photo/\?fbid=|photo\.php\?fbid=|\"fbid\":\")(\d{8,})", html):
+                if m.group(1) not in fbids:
+                    fbids.append(m.group(1))
+            logging.info("[%s] photos tab: %d photo ids", slug, len(fbids))
+            DEBUG.mkdir(parents=True, exist_ok=True)
+            page.screenshot(path=str(DEBUG / f"{slug}_photos_screen.png"))
+
+            for n, fbid in enumerate(fbids[:max_photos]):
+                try:
+                    page.goto(f"https://www.facebook.com/photo/?fbid={fbid}", timeout=45000,
+                              wait_until="domcontentloaded")
+                    time.sleep(2)
+                    blobs = page.eval_on_selector_all(
+                        'script[type="application/json"]', "els => els.map(e => e.textContent)")
+                    text = creation = img = owner = None
+                    for b in blobs:
+                        if fbid not in b:
+                            continue
+                        try:
+                            obj = json.loads(b)
+                        except json.JSONDecodeError:
+                            continue
+                        t, c, i, o = find_photo_post(obj, fbid)
+                        text, creation, img, owner = text or t, creation or c, img or i, owner or o
+                    if not img:  # fall back to the rendered <img>
+                        try:
+                            img = page.locator('img[data-visualcompletion="media-vc-image"]').first \
+                                .get_attribute("src", timeout=3000)
+                        except Exception:  # noqa: BLE001
+                            pass
+                    if not text:
+                        try:
+                            meta = page.locator('meta[property="og:description"]').first \
+                                .get_attribute("content", timeout=2000)
+                            text = meta
+                        except Exception:  # noqa: BLE001
+                            pass
+                    if n == 0:
+                        (DEBUG / f"{slug}_photo_page.html").write_text(page.content()[:500000], encoding="utf-8")
+                    when = dt.datetime.fromtimestamp(creation, TZ_TW).isoformat() if creation else None
+                    logging.info("[%s] photo %d/%d fbid=%s time=%s img=%s text=%r", slug, n + 1,
+                                 min(len(fbids), max_photos), fbid, when, bool(img), (text or "")[:50])
+                    pid = owner or fbid
+                    posts[pid] = {
+                        "post_id": pid, "photo_fbid": fbid,
+                        "post_url": f"https://www.facebook.com/photo/?fbid={fbid}",
+                        "time": when, "timestamp": creation, "text": text,
+                        "image_urls": [img] if img else [],
+                    }
+                    if creation and creation < cutoff:
+                        logging.info("[%s] reached photos older than %d days", slug, days)
+                        break
+                    time.sleep(2)
+                except Exception as e:  # noqa: BLE001
+                    logging.warning("[%s] photo %s failed: %s", slug, fbid, e)
+        finally:
+            ctx.close()
+            browser.close()
+    return posts
+
+
 # ── API step: paginate GraphQL directly ──────────────────────────────────────
 
 def api_paginate(slug, doc_id, variables, days, max_rounds=40):
@@ -393,6 +495,14 @@ def scrape_page(slug: str, days: int) -> int:
         found.update(api_paginate(slug, doc_id, variables, days))
     else:
         logging.error("[%s] could not capture the timeline GraphQL request (login wall / blocked?)", slug)
+
+    try:
+        for pid, post in scrape_photos(slug, max_photos=25, days=days).items():
+            found.setdefault(pid, post)
+            if not found[pid].get("image_urls") and post["image_urls"]:
+                found[pid]["image_urls"] = post["image_urls"]
+    except Exception as e:  # noqa: BLE001
+        logging.exception("[%s] photos step failed: %s", slug, e)
 
     new_count = 0
     now = dt.datetime.now(dt.timezone.utc).isoformat()
