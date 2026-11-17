@@ -1,5 +1,7 @@
-2026-11-17 12:38:01,449 INFO === scraping cardmaster.tw ===
-2026-11-17 12:38:02,997 WARNING No raw posts (<article> elements) were found in this page.
-2026-11-17 12:38:02,998 INFO Page parser did not find next page URL
-2026-11-17 12:38:02,998 INFO [cardmaster.tw] done: 0 new, 0 total
-2026-11-17 12:38:02,999 INFO ALL DONE: 0 new posts across 1 pages
+2026-11-17 12:52:23,538 INFO === scraping cardmaster.tw ===
+2026-11-17 12:52:34,752 INFO [cardmaster.tw] browser session: 21 graphql responses, 0 posts
+2026-11-17 12:52:34,752 INFO [cardmaster.tw] timeline doc_id=29912369648355740 id=100063830777192
+2026-11-17 12:52:35,036 INFO [cardmaster.tw] api round 0: +0 posts (total 0) oldest=None
+2026-11-17 12:52:36,664 INFO [cardmaster.tw] api round 1: +0 posts (total 0) oldest=None
+2026-11-17 12:52:36,666 INFO [cardmaster.tw] done: 0 new, 0 total
+2026-11-17 12:52:36,666 INFO ALL DONE: 0 new posts across 1 pages
