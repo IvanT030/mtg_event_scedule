@@ -1,7 +1,8 @@
-2026-11-17 12:52:23,538 INFO === scraping cardmaster.tw ===
-2026-11-17 12:52:34,752 INFO [cardmaster.tw] browser session: 21 graphql responses, 0 posts
-2026-11-17 12:52:34,752 INFO [cardmaster.tw] timeline doc_id=29912369648355740 id=100063830777192
-2026-11-17 12:52:35,036 INFO [cardmaster.tw] api round 0: +0 posts (total 0) oldest=None
-2026-11-17 12:52:36,664 INFO [cardmaster.tw] api round 1: +0 posts (total 0) oldest=None
-2026-11-17 12:52:36,666 INFO [cardmaster.tw] done: 0 new, 0 total
-2026-11-17 12:52:36,666 INFO ALL DONE: 0 new posts across 1 pages
+2026-11-17 12:54:00,479 INFO === scraping cardmaster.tw ===
+2026-11-17 12:54:07,840 INFO [cardmaster.tw] page html: 86 json blobs, 2 mention post_id
+2026-11-17 12:54:47,067 INFO [cardmaster.tw] browser session: 312 bodies, 1 posts
+2026-11-17 12:54:47,067 INFO [cardmaster.tw] timeline doc_id=29912369648355740 id=100063830777192
+2026-11-17 12:54:47,329 WARNING [cardmaster.tw] api error: {"errors":[{"message":"Rate limit exceeded","severity":"CRITICAL","code":1675004}],"extensions":{"is_final":true}}
+2026-11-17 12:54:47,388 INFO [cardmaster.tw] done: 1 new, 1 total
+2026-11-17 12:54:47,388 INFO    2026-11-17T19:48:07+08:00 | imgs=1 | #就在這週六  １１／２１～ REVOLUTION BOOSTER 02奪盒賽 時間：１１／２１（六），１４:００開始報
+2026-11-17 12:54:47,388 INFO ALL DONE: 1 new posts across 1 pages
