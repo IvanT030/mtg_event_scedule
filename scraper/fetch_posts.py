@@ -172,6 +172,40 @@ def parse_lines(body: str):
             continue
 
 
+def load_fb_cookies() -> list[dict]:
+    """Read FB_COOKIES env: Cookie-Editor JSON export, or 'c_user=..; xs=..' string."""
+    import os
+    raw = (os.environ.get("FB_COOKIES") or "").strip()
+    if not raw:
+        return []
+    pairs = []
+    if raw.startswith("["):
+        try:
+            for c in json.loads(raw):
+                if c.get("name") and c.get("value") is not None:
+                    pairs.append((c["name"], str(c["value"])))
+        except json.JSONDecodeError:
+            logging.error("FB_COOKIES looks like JSON but could not be parsed")
+    else:
+        for part in raw.split(";"):
+            if "=" in part:
+                k, v = part.split("=", 1)
+                pairs.append((k.strip(), v.strip()))
+    names = {k for k, _ in pairs}
+    if not {"c_user", "xs"} <= names:
+        logging.error("FB_COOKIES is missing c_user and/or xs; ignoring it")
+        return []
+    return [{"name": k, "value": v, "domain": ".facebook.com", "path": "/",
+             "secure": True, "httpOnly": k in ("xs", "fr", "datr", "sb")} for k, v in pairs]
+
+
+def add_fb_cookies(ctx):
+    cookies = load_fb_cookies()
+    if cookies:
+        ctx.add_cookies(cookies)
+        logging.info("logged-in session: using %d cookies from FB_COOKIES", len(cookies))
+
+
 # ── browser step: capture initial GraphQL payload ────────────────────────────
 
 def capture_init_payload(slug: str, scrolls: int = 30):
@@ -192,6 +226,7 @@ def capture_init_payload(slug: str, scrolls: int = 30):
             user_agent=("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
                         "(KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"),
         )
+        add_fb_cookies(ctx)
         page = ctx.new_page()
 
         def on_request(req):
@@ -305,6 +340,7 @@ def scrape_photos(slug: str, max_photos: int, days: int) -> dict:
             user_agent=("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
                         "(KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"),
         )
+        add_fb_cookies(ctx)
         page = ctx.new_page()
         try:
             page.goto(f"https://www.facebook.com/{slug}/photos", timeout=60000, wait_until="domcontentloaded")
