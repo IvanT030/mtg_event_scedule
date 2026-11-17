@@ -1,0 +1,3 @@
+facebook-scraper @ git+https://github.com/kevinzg/facebook-scraper.git
+lxml_html_clean
+requests

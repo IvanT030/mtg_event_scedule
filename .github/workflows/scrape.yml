@@ -1,0 +1,58 @@
+name: Scrape FB posts
+
+on:
+  workflow_dispatch:
+    inputs:
+      page:
+        description: "粉專網址或帳號（多個用逗號分隔；留空則用 pages.txt）"
+        required: false
+        default: ""
+      pages:
+        description: "每個粉專往回翻幾頁"
+        required: false
+        default: "3"
+  schedule:
+    - cron: "17 22 * * *"   # 每天台灣時間 06:17
+
+permissions:
+  contents: write
+
+concurrency:
+  group: scrape
+  cancel-in-progress: false
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install
+        run: |
+          pip install -r scraper/requirements.txt
+
+      - name: Scrape
+        env:
+          FB_COOKIES: ${{ secrets.FB_COOKIES }}
+          INPUT_PAGE: ${{ github.event.inputs.page }}
+          INPUT_PAGES: ${{ github.event.inputs.pages || '3' }}
+        run: |
+          if [ -n "$INPUT_PAGE" ]; then
+            python scraper/fetch_posts.py --page "$INPUT_PAGE" --pages "$INPUT_PAGES"
+          else
+            python scraper/fetch_posts.py --pages "$INPUT_PAGES"
+          fi
+
+      - name: Commit results
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/
+          git diff --cached --quiet || git commit -m "data: scrape $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push
