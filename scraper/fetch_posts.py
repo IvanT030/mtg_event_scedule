@@ -357,6 +357,9 @@ def scrape_photos(slug: str, max_photos: int, days: int) -> dict:
                     when = dt.datetime.fromtimestamp(creation, TZ_TW).isoformat() if creation else None
                     logging.info("[%s] photo %d/%d fbid=%s time=%s img=%s text=%r", slug, n + 1,
                                  min(len(fbids), max_photos), fbid, when, bool(img), (text or "")[:50])
+                    if not (text or img or creation):
+                        logging.info("[%s] photo page is login-walled; stopping photos step", slug)
+                        break
                     pid = owner or fbid
                     posts[pid] = {
                         "post_id": pid, "photo_fbid": fbid,
