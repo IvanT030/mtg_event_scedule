@@ -1,8 +1,37 @@
-2026-11-17 12:54:00,479 INFO === scraping cardmaster.tw ===
-2026-11-17 12:54:07,840 INFO [cardmaster.tw] page html: 86 json blobs, 2 mention post_id
-2026-11-17 12:54:47,067 INFO [cardmaster.tw] browser session: 312 bodies, 1 posts
-2026-11-17 12:54:47,067 INFO [cardmaster.tw] timeline doc_id=29912369648355740 id=100063830777192
-2026-11-17 12:54:47,329 WARNING [cardmaster.tw] api error: {"errors":[{"message":"Rate limit exceeded","severity":"CRITICAL","code":1675004}],"extensions":{"is_final":true}}
-2026-11-17 12:54:47,388 INFO [cardmaster.tw] done: 1 new, 1 total
-2026-11-17 12:54:47,388 INFO    2026-11-17T19:48:07+08:00 | imgs=1 | #就在這週六  １１／２１～ REVOLUTION BOOSTER 02奪盒賽 時間：１１／２１（六），１４:００開始報
-2026-11-17 12:54:47,388 INFO ALL DONE: 1 new posts across 1 pages
+2026-11-17 12:56:26,926 INFO === scraping cardmaster.tw ===
+2026-11-17 12:56:34,797 INFO [cardmaster.tw] page html: 49 json blobs, 0 mention post_id
+2026-11-17 12:57:13,098 INFO [cardmaster.tw] browser session: 0 bodies, 0 posts
+2026-11-17 12:57:13,099 ERROR [cardmaster.tw] could not capture the timeline GraphQL request (login wall / blocked?)
+2026-11-17 12:57:25,271 INFO [cardmaster.tw] photos tab: 82 photo ids
+2026-11-17 12:57:32,684 INFO [cardmaster.tw] photo 1/25 fbid=1663681822436161 time=None img=False text=''
+2026-11-17 12:57:41,974 INFO [cardmaster.tw] photo 2/25 fbid=683463820457971 time=None img=False text=''
+2026-11-17 12:57:51,226 INFO [cardmaster.tw] photo 3/25 fbid=1731572245647118 time=None img=False text=''
+2026-11-17 12:58:00,495 INFO [cardmaster.tw] photo 4/25 fbid=1731510128986663 time=None img=False text=''
+2026-11-17 12:58:09,759 INFO [cardmaster.tw] photo 5/25 fbid=1731301059007570 time=None img=False text=''
+2026-11-17 12:58:19,019 INFO [cardmaster.tw] photo 6/25 fbid=1731301002340909 time=None img=False text=''
+2026-11-17 12:58:28,286 INFO [cardmaster.tw] photo 7/25 fbid=1731300912340918 time=None img=False text=''
+2026-11-17 12:58:37,550 INFO [cardmaster.tw] photo 8/25 fbid=1731300862340923 time=None img=False text=''
+2026-11-17 12:58:46,835 INFO [cardmaster.tw] photo 9/25 fbid=1731300822340927 time=None img=False text=''
+2026-11-17 12:58:56,103 INFO [cardmaster.tw] photo 10/25 fbid=1731300702340939 time=None img=False text=''
+2026-11-17 12:59:05,352 INFO [cardmaster.tw] photo 11/25 fbid=1731300665674276 time=None img=False text=''
+2026-11-17 12:59:14,634 INFO [cardmaster.tw] photo 12/25 fbid=1731300615674281 time=None img=False text=''
+2026-11-17 12:59:23,888 INFO [cardmaster.tw] photo 13/25 fbid=1731300519007624 time=None img=False text=''
+2026-11-17 12:59:33,154 INFO [cardmaster.tw] photo 14/25 fbid=1731300465674296 time=None img=False text=''
+2026-11-17 12:59:42,406 INFO [cardmaster.tw] photo 15/25 fbid=1729731559164520 time=None img=False text=''
+2026-11-17 12:59:51,650 INFO [cardmaster.tw] photo 16/25 fbid=1729731375831205 time=None img=False text=''
+2026-11-17 13:00:00,908 INFO [cardmaster.tw] photo 17/25 fbid=1729731359164540 time=None img=False text=''
+2026-11-17 13:00:10,173 INFO [cardmaster.tw] photo 18/25 fbid=1729731355831207 time=None img=False text=''
+2026-11-17 13:00:19,432 INFO [cardmaster.tw] photo 19/25 fbid=1728913635912979 time=None img=False text=''
+2026-11-17 13:00:28,683 INFO [cardmaster.tw] photo 20/25 fbid=1728913615912981 time=None img=False text=''
+2026-11-17 13:00:37,962 INFO [cardmaster.tw] photo 21/25 fbid=1728913392579670 time=None img=False text=''
+2026-11-17 13:00:47,198 INFO [cardmaster.tw] photo 22/25 fbid=1728913209246355 time=None img=False text=''
+2026-11-17 13:00:56,480 INFO [cardmaster.tw] photo 23/25 fbid=1728897982581211 time=None img=False text=''
+2026-11-17 13:01:05,747 INFO [cardmaster.tw] photo 24/25 fbid=1728571805947162 time=None img=False text=''
+2026-11-17 13:01:15,009 INFO [cardmaster.tw] photo 25/25 fbid=1728322325972110 time=None img=False text=''
+2026-11-17 13:01:17,040 INFO [cardmaster.tw] done: 25 new, 26 total
+2026-11-17 13:01:17,040 INFO    2026-11-17T19:48:07+08:00 | imgs=1 | #就在這週六  １１／２１～ REVOLUTION BOOSTER 02奪盒賽 時間：１１／２１（六），１４:００開始報
+2026-11-17 13:01:17,040 INFO    None | imgs=0 | 
+2026-11-17 13:01:17,040 INFO    None | imgs=0 | 
+2026-11-17 13:01:17,040 INFO    None | imgs=0 | 
+2026-11-17 13:01:17,040 INFO    None | imgs=0 | 
+2026-11-17 13:01:17,040 INFO ALL DONE: 25 new posts across 1 pages
