@@ -529,7 +529,9 @@ def scrape_page(slug: str, days: int) -> int:
             (DEBUG / f"{slug}_body_with_post_id.txt").write_text(
                 max(with_posts, key=len)[:400000], encoding="utf-8")
 
-    if doc_id:
+    if doc_id and load_fb_cookies():
+        logging.info("[%s] logged in: skipping anonymous API pagination", slug)
+    elif doc_id:
         logging.info("[%s] timeline doc_id=%s id=%s", slug, doc_id, variables.get("id"))
         found.update(api_paginate(slug, doc_id, variables, days))
     else:
