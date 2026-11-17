@@ -1,5 +1,5 @@
-2026-11-17 11:10:36,588 INFO === scraping share ===
-2026-11-17 11:10:37,124 WARNING No raw posts (<article> elements) were found in this page.
-2026-11-17 11:10:37,125 INFO Page parser did not find next page URL
-2026-11-17 11:10:37,125 INFO [share] done: 0 new, 0 total
-2026-11-17 11:10:37,125 INFO ALL DONE: 0 new posts across 1 pages
+2026-11-17 12:35:56,427 INFO === scraping share ===
+2026-11-17 12:35:57,251 WARNING No raw posts (<article> elements) were found in this page.
+2026-11-17 12:35:57,251 INFO Page parser did not find next page URL
+2026-11-17 12:35:57,251 INFO [share] done: 0 new, 0 total
+2026-11-17 12:35:57,251 INFO ALL DONE: 0 new posts across 1 pages
