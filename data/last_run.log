@@ -1,5 +1,5 @@
-2026-11-17 12:35:56,427 INFO === scraping share ===
-2026-11-17 12:35:57,251 WARNING No raw posts (<article> elements) were found in this page.
-2026-11-17 12:35:57,251 INFO Page parser did not find next page URL
-2026-11-17 12:35:57,251 INFO [share] done: 0 new, 0 total
-2026-11-17 12:35:57,251 INFO ALL DONE: 0 new posts across 1 pages
+2026-11-17 12:38:01,449 INFO === scraping cardmaster.tw ===
+2026-11-17 12:38:02,997 WARNING No raw posts (<article> elements) were found in this page.
+2026-11-17 12:38:02,998 INFO Page parser did not find next page URL
+2026-11-17 12:38:02,998 INFO [cardmaster.tw] done: 0 new, 0 total
+2026-11-17 12:38:02,999 INFO ALL DONE: 0 new posts across 1 pages
