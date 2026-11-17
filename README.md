@@ -5,7 +5,7 @@
 ## 結構
 
 - `pages.txt`：要爬的粉專清單
-- `scraper/fetch_posts.py`：爬蟲（使用 [kevinzg/facebook-scraper](https://github.com/kevinzg/facebook-scraper)）
+- `scraper/fetch_posts.py`：爬蟲（Playwright，不需登入）
 - `.github/workflows/scrape.yml`：GitHub Actions，每天自動跑，也可手動執行
 - `data/posts/<粉專>.json`：抓到的貼文
 - `data/images/<粉專>/`：貼文圖片
@@ -13,9 +13,9 @@
 
 ## 手動執行
 
-GitHub repo → Actions → Scrape FB posts → Run workflow，填入粉專網址。
+GitHub repo → Actions → Scrape FB posts → Run workflow，填入粉專網址與天數。
 
-## 選用：登入 cookies
+## 原理
 
-如果未登入抓不到東西，可以把 FB 的 cookies（Netscape cookies.txt 格式）
-存成 repo secret `FB_COOKIES`。建議用小號，不要用主帳號。
+用 Playwright 開粉專頁面，攔截 FB 自己發出的 GraphQL 請求（doc_id、粉專 id），再直接翻頁呼叫 GraphQL API。
+參考 [KarkiMilan/facebook-scrapper](https://github.com/KarkiMilan/facebook-scrapper) 的方法，以 Python 自行實作。
