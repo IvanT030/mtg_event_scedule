@@ -56,7 +56,15 @@ def read_pages(args) -> list[str]:
             line = line.split("#", 1)[0].strip()
             if line:
                 pages.append(line)
-    return [page_slug(p) for p in pages]
+    slugs = []
+    for p in pages:
+        s = page_slug(p)
+        if s in ("share", "sharer", "sharer.php", "story.php", "permalink.php", "groups", "watch"):
+            logging.error("無法使用的網址：%s —— 這是分享/貼文連結，請改用粉專首頁網址，"
+                          "例如 https://www.facebook.com/cardmaster.tw/", p)
+            continue
+        slugs.append(s)
+    return slugs
 
 
 def to_jsonable(value):
