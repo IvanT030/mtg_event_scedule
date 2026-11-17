@@ -174,8 +174,13 @@ def parse_lines(body: str):
 
 # ── browser step: capture initial GraphQL payload ────────────────────────────
 
-def capture_init_payload(slug: str):
-    """Return (doc_id, variables, captured_bodies) or (None, None, bodies)."""
+def capture_init_payload(slug: str, scrolls: int = 30):
+    """Return (doc_id, variables, captured_bodies) or (None, None, bodies).
+
+    captured_bodies includes the GraphQL responses the browser received while
+    scrolling, plus the JSON embedded in the page HTML (first posts are
+    server-rendered there).
+    """
     from playwright.sync_api import sync_playwright
 
     requests_seen, bodies = [], []
@@ -208,21 +213,24 @@ def capture_init_payload(slug: str):
             time.sleep(1)
             page.goto(f"https://www.facebook.com/{slug}", timeout=60000, wait_until="domcontentloaded")
             time.sleep(3)
+            # server-rendered JSON blobs (contain the first few posts)
+            try:
+                blobs = page.eval_on_selector_all(
+                    'script[type="application/json"]', "els => els.map(e => e.textContent)")
+                ssr = [b for b in blobs if b and "post_id" in b]
+                bodies.extend(ssr)
+                logging.info("[%s] page html: %d json blobs, %d mention post_id", slug, len(blobs), len(ssr))
+            except Exception as e:  # noqa: BLE001
+                logging.warning("[%s] could not read page json: %s", slug, e)
             dismiss_login(page)
-            for _ in range(40):
-                if pick_timeline_payload(requests_seen):
-                    break
-                page.mouse.wheel(0, 3000)
-                time.sleep(0.7)
-                if _ % 8 == 7:
+            for i in range(scrolls):
+                page.mouse.wheel(0, 2500)
+                time.sleep(1.2)
+                if i % 6 == 5:
                     dismiss_login(page)
             time.sleep(2)
-            if not pick_timeline_payload(requests_seen):
-                DEBUG.mkdir(parents=True, exist_ok=True)
-                page.screenshot(path=str(DEBUG / f"{slug}_screen.png"), full_page=False)
-                (DEBUG / f"{slug}_page.html").write_text(page.content()[:400000], encoding="utf-8")
-                logging.warning("[%s] saved debug screenshot/html; graphql requests seen=%d",
-                                slug, len(requests_seen))
+            DEBUG.mkdir(parents=True, exist_ok=True)
+            page.screenshot(path=str(DEBUG / f"{slug}_screen.png"), full_page=False)
         finally:
             ctx.close()
             browser.close()
@@ -290,6 +298,9 @@ def api_paginate(slug, doc_id, variables, days, max_rounds=40):
             continue
         if r.status_code != 200 or not r.text.strip():
             logging.warning("[%s] api HTTP %s, %d bytes; stopping", slug, r.status_code, len(r.text))
+            break
+        if '"errors"' in r.text[:300] and "post_id" not in r.text:
+            logging.warning("[%s] api error: %s", slug, r.text[:200])
             break
 
         new_here, oldest, page_info = 0, None, None
@@ -362,7 +373,20 @@ def scrape_page(slug: str, days: int) -> int:
                 post = extract_post(story)
                 if post:
                     found[post["post_id"]] = post
-    logging.info("[%s] browser session: %d graphql responses, %d posts", slug, len(bodies), len(found))
+    logging.info("[%s] browser session: %d bodies, %d posts", slug, len(bodies), len(found))
+    if not found:
+        DEBUG.mkdir(parents=True, exist_ok=True)
+        lines = []
+        for i, b in enumerate(bodies):
+            err = re.search(r'"errors":\[\{"message":"([^"]+)', b)
+            lines.append(f"#{i} len={len(b)} post_id={'post_id' in b} "
+                         f"creation_time={'creation_time' in b} err={err.group(1) if err else None} "
+                         f"head={b[:200]!r}")
+        (DEBUG / f"{slug}_bodies_summary.txt").write_text("\n".join(lines), encoding="utf-8")
+        with_posts = [b for b in bodies if "post_id" in b]
+        if with_posts:
+            (DEBUG / f"{slug}_body_with_post_id.txt").write_text(
+                max(with_posts, key=len)[:400000], encoding="utf-8")
 
     if doc_id:
         logging.info("[%s] timeline doc_id=%s id=%s", slug, doc_id, variables.get("id"))
