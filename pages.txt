@@ -1,3 +1,5 @@
 # 要爬的 FB 粉專，一行一個（網址或帳號都可以），# 後面是註解
 # 請用粉專首頁網址，不要用 FB app「分享」產生的 facebook.com/share/... 連結
 https://www.facebook.com/cardmaster.tw/   # Cardmaster
+https://www.facebook.com/GameSquareTCG # 遊戲平方
+https://www.facebook.com/MAGICSTAR01 # magicstar
