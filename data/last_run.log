@@ -1,15 +1,15 @@
-2026-11-18 02:02:55,938 INFO === scraping cardmaster.tw ===
-2026-11-18 02:03:01,996 INFO [cardmaster.tw] page html: 86 json blobs, 2 mention post_id
-2026-11-18 02:03:04,099 INFO [cardmaster.tw] reached already-saved post 1731572442313765; stop scrolling
-2026-11-18 02:03:06,248 INFO [cardmaster.tw] browser session: 34 bodies, 1 posts
-2026-11-18 02:03:06,248 INFO [cardmaster.tw] timeline doc_id=29943096475316353 id=100063830777192
-2026-11-18 02:03:06,412 WARNING [cardmaster.tw] api error: {"errors":[{"message":"Rate limit exceeded","severity":"CRITICAL","code":1675004}],"extensions":{"is_final":true}}
-2026-11-18 02:03:18,509 INFO [cardmaster.tw] photos tab: 82 photo ids
-2026-11-18 02:03:25,972 INFO [cardmaster.tw] photo 1/25 fbid=1663681822436161 time=None img=False text=''
-2026-11-18 02:03:25,972 INFO [cardmaster.tw] photo page is login-walled; stopping photos step
-2026-11-18 02:03:26,014 INFO [cardmaster.tw] done: 0 new, 4 total
-2026-11-18 02:03:26,015 INFO    2026-11-17T19:48:07+08:00 | imgs=1 | #就在這週六  １１／２１～ REVOLUTION BOOSTER 02奪盒賽 時間：１１／２１（六），１４:００開始報
-2026-11-18 02:03:26,015 INFO    2026-11-17T18:52:44+08:00 | imgs=1 | 要開戰啦!! 《Marvel Hero Rush》將於 12 月 5 日（六）首次於台灣舉辦官方賽事「Marvel He
-2026-11-18 02:03:26,015 INFO    2026-11-17T15:25:40+08:00 | imgs=5 | 英文版寶可夢「#DeltaReign」產品到貨 部份商品數量有限 最近也新增不少舊系列卡包零售 挖寶還不手刀來看看（？）
-2026-11-18 02:03:26,015 INFO    2026-11-16T12:57:44+08:00 | imgs=4 | 【SVE、VG 賽事回顧】 依舊感謝大家的參與~ VG與SVE 周賽順利結束~ 這個月的SVE台灣決賽資格賽 恭喜由荒野
-2026-11-18 02:03:26,015 INFO ALL DONE: 0 new posts across 1 pages
+2026-11-18 03:43:08,245 INFO === scraping cardmaster.tw ===
+2026-11-18 03:43:14,990 INFO [cardmaster.tw] page html: 86 json blobs, 2 mention post_id
+2026-11-18 03:43:17,111 INFO [cardmaster.tw] reached already-saved post 1731572442313765; stop scrolling
+2026-11-18 03:43:19,246 INFO [cardmaster.tw] browser session: 38 bodies, 1 posts
+2026-11-18 03:43:19,247 INFO [cardmaster.tw] timeline doc_id=29943096475316353 id=100063830777192
+2026-11-18 03:43:19,523 WARNING [cardmaster.tw] api error: {"errors":[{"message":"Rate limit exceeded","severity":"CRITICAL","code":1675004}],"extensions":{"is_final":true}}
+2026-11-18 03:43:32,155 INFO [cardmaster.tw] photos tab: 82 photo ids
+2026-11-18 03:43:39,752 INFO [cardmaster.tw] photo 1/25 fbid=1663681822436161 time=None img=False text=''
+2026-11-18 03:43:39,753 INFO [cardmaster.tw] photo page is login-walled; stopping photos step
+2026-11-18 03:43:39,814 INFO [cardmaster.tw] done: 0 new, 4 total
+2026-11-18 03:43:39,814 INFO    2026-11-17T19:48:07+08:00 | imgs=1 | #就在這週六  １１／２１～ REVOLUTION BOOSTER 02奪盒賽 時間：１１／２１（六），１４:００開始報
+2026-11-18 03:43:39,814 INFO    2026-11-17T18:52:44+08:00 | imgs=1 | 要開戰啦!! 《Marvel Hero Rush》將於 12 月 5 日（六）首次於台灣舉辦官方賽事「Marvel He
+2026-11-18 03:43:39,814 INFO    2026-11-17T15:25:40+08:00 | imgs=5 | 英文版寶可夢「#DeltaReign」產品到貨 部份商品數量有限 最近也新增不少舊系列卡包零售 挖寶還不手刀來看看（？）
+2026-11-18 03:43:39,814 INFO    2026-11-16T12:57:44+08:00 | imgs=4 | 【SVE、VG 賽事回顧】 依舊感謝大家的參與~ VG與SVE 周賽順利結束~ 這個月的SVE台灣決賽資格賽 恭喜由荒野
+2026-11-18 03:43:39,814 INFO ALL DONE: 0 new posts across 1 pages
