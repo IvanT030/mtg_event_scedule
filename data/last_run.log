@@ -1,15 +1,36 @@
-2026-11-18 03:43:08,245 INFO === scraping cardmaster.tw ===
-2026-11-18 03:43:14,990 INFO [cardmaster.tw] page html: 86 json blobs, 2 mention post_id
-2026-11-18 03:43:17,111 INFO [cardmaster.tw] reached already-saved post 1731572442313765; stop scrolling
-2026-11-18 03:43:19,246 INFO [cardmaster.tw] browser session: 38 bodies, 1 posts
-2026-11-18 03:43:19,247 INFO [cardmaster.tw] timeline doc_id=29943096475316353 id=100063830777192
-2026-11-18 03:43:19,523 WARNING [cardmaster.tw] api error: {"errors":[{"message":"Rate limit exceeded","severity":"CRITICAL","code":1675004}],"extensions":{"is_final":true}}
-2026-11-18 03:43:32,155 INFO [cardmaster.tw] photos tab: 82 photo ids
-2026-11-18 03:43:39,752 INFO [cardmaster.tw] photo 1/25 fbid=1663681822436161 time=None img=False text=''
-2026-11-18 03:43:39,753 INFO [cardmaster.tw] photo page is login-walled; stopping photos step
-2026-11-18 03:43:39,814 INFO [cardmaster.tw] done: 0 new, 4 total
-2026-11-18 03:43:39,814 INFO    2026-11-17T19:48:07+08:00 | imgs=1 | #就在這週六  １１／２１～ REVOLUTION BOOSTER 02奪盒賽 時間：１１／２１（六），１４:００開始報
-2026-11-18 03:43:39,814 INFO    2026-11-17T18:52:44+08:00 | imgs=1 | 要開戰啦!! 《Marvel Hero Rush》將於 12 月 5 日（六）首次於台灣舉辦官方賽事「Marvel He
-2026-11-18 03:43:39,814 INFO    2026-11-17T15:25:40+08:00 | imgs=5 | 英文版寶可夢「#DeltaReign」產品到貨 部份商品數量有限 最近也新增不少舊系列卡包零售 挖寶還不手刀來看看（？）
-2026-11-18 03:43:39,814 INFO    2026-11-16T12:57:44+08:00 | imgs=4 | 【SVE、VG 賽事回顧】 依舊感謝大家的參與~ VG與SVE 周賽順利結束~ 這個月的SVE台灣決賽資格賽 恭喜由荒野
-2026-11-18 03:43:39,814 INFO ALL DONE: 0 new posts across 1 pages
+2026-11-18 09:08:56,637 INFO === scraping cardmaster.tw ===
+2026-11-18 09:09:04,392 INFO [cardmaster.tw] page html: 86 json blobs, 2 mention post_id
+2026-11-18 09:09:53,091 INFO [cardmaster.tw] browser session: 586 bodies, 1 posts
+2026-11-18 09:09:53,092 INFO [cardmaster.tw] timeline doc_id=29943096475316353 id=100063830777192
+2026-11-18 09:09:53,249 WARNING [cardmaster.tw] api error: {"errors":[{"message":"Rate limit exceeded","severity":"CRITICAL","code":1675004}],"extensions":{"is_final":true}}
+2026-11-18 09:10:05,335 INFO [cardmaster.tw] photos tab: 82 photo ids
+2026-11-18 09:10:12,916 INFO [cardmaster.tw] photo 1/25 fbid=1663681822436161 time=None img=False text=''
+2026-11-18 09:10:12,916 INFO [cardmaster.tw] photo page is login-walled; stopping photos step
+2026-11-18 09:10:14,099 INFO [cardmaster.tw] done: 1 new, 5 total
+2026-11-18 09:10:14,099 INFO    2026-11-18T16:26:18+08:00 | imgs=5 | 寶可夢商品「#英文版30週年UPC禮盒」 👉超限量商品數量不多，售完為止 現場提供多種產品可供搭配🎉🎉 . 現場拆了一盒
+2026-11-18 09:10:14,099 INFO    2026-11-17T19:48:07+08:00 | imgs=1 | #就在這週六  １１／２１～ REVOLUTION BOOSTER 02奪盒賽 時間：１１／２１（六），１４:００開始報
+2026-11-18 09:10:14,099 INFO    2026-11-17T18:52:44+08:00 | imgs=1 | 要開戰啦!! 《Marvel Hero Rush》將於 12 月 5 日（六）首次於台灣舉辦官方賽事「Marvel He
+2026-11-18 09:10:14,099 INFO    2026-11-17T15:25:40+08:00 | imgs=5 | 英文版寶可夢「#DeltaReign」產品到貨 部份商品數量有限 最近也新增不少舊系列卡包零售 挖寶還不手刀來看看（？）
+2026-11-18 09:10:14,099 INFO    2026-11-16T12:57:44+08:00 | imgs=4 | 【SVE、VG 賽事回顧】 依舊感謝大家的參與~ VG與SVE 周賽順利結束~ 這個月的SVE台灣決賽資格賽 恭喜由荒野
+2026-11-18 09:10:14,099 INFO === scraping GameSquareTCG ===
+2026-11-18 09:10:19,901 INFO [GameSquareTCG] page html: 86 json blobs, 2 mention post_id
+2026-11-18 09:11:08,487 INFO [GameSquareTCG] browser session: 449 bodies, 1 posts
+2026-11-18 09:11:08,487 INFO [GameSquareTCG] timeline doc_id=29943096475316353 id=100063588205788
+2026-11-18 09:11:08,643 WARNING [GameSquareTCG] api error: {"errors":[{"message":"Rate limit exceeded","severity":"CRITICAL","code":1675004}],"extensions":{"is_final":true}}
+2026-11-18 09:11:20,747 INFO [GameSquareTCG] photos tab: 82 photo ids
+2026-11-18 09:11:28,268 INFO [GameSquareTCG] photo 1/25 fbid=1757962636333326 time=None img=False text=''
+2026-11-18 09:11:28,268 INFO [GameSquareTCG] photo page is login-walled; stopping photos step
+2026-11-18 09:11:28,620 INFO [GameSquareTCG] done: 1 new, 1 total
+2026-11-18 09:11:28,620 INFO    2026-11-06T23:07:20+08:00 | imgs=1 | 🥳遊戲平方 週五店內賽事轉播🥳  今日星艦迷航記 售現賽兩場都順利開賽🤗 感謝今天來店參賽的大家~ 也謝謝來店遊玩薪傳及
+2026-11-18 09:11:28,620 INFO === scraping MAGICSTAR01 ===
+2026-11-18 09:11:34,916 INFO [MAGICSTAR01] page html: 86 json blobs, 2 mention post_id
+2026-11-18 09:12:18,279 INFO [MAGICSTAR01] nothing new after 6 scrolls; stop
+2026-11-18 09:12:20,409 INFO [MAGICSTAR01] browser session: 360 bodies, 1 posts
+2026-11-18 09:12:20,409 INFO [MAGICSTAR01] timeline doc_id=29943096475316353 id=100063914318929
+2026-11-18 09:12:20,593 WARNING [MAGICSTAR01] api error: {"errors":[{"message":"Rate limit exceeded","severity":"CRITICAL","code":1675004}],"extensions":{"is_final":true}}
+2026-11-18 09:12:32,695 INFO [MAGICSTAR01] photos tab: 82 photo ids
+2026-11-18 09:12:40,109 INFO [MAGICSTAR01] photo 1/25 fbid=1075291621277972 time=None img=False text=''
+2026-11-18 09:12:40,109 INFO [MAGICSTAR01] photo page is login-walled; stopping photos step
+2026-11-18 09:12:40,416 INFO [MAGICSTAR01] done: 1 new, 1 total
+2026-11-18 09:12:40,416 INFO    2026-11-18T16:00:31+08:00 | imgs=1 | 寶可骰補充包第二彈到貨！
+2026-11-18 09:12:40,416 INFO ALL DONE: 3 new posts across 3 pages
