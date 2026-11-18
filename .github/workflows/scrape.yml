@@ -42,7 +42,6 @@ jobs:
 
       - name: Scrape
         env:
-          FB_COOKIES: ${{ secrets.FB_COOKIES }}
           INPUT_PAGE: ${{ github.event.inputs.page }}
           INPUT_DAYS: ${{ github.event.inputs.days || '30' }}
         run: |

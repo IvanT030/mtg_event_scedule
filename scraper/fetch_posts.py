@@ -37,6 +37,7 @@ DEBUG = DATA / "debug"
 LOG_FILE = DATA / "last_run.log"
 GRAPHQL_URL = "https://www.facebook.com/api/graphql/"
 TZ_TW = dt.timezone(dt.timedelta(hours=8))
+HEADLESS = True
 
 BAD_SLUGS = {"share", "sharer", "sharer.php", "story.php", "permalink.php",
              "groups", "watch", "photo", "photo.php", "events"}
@@ -208,7 +209,22 @@ def add_fb_cookies(ctx):
 
 # ── browser step: capture initial GraphQL payload ────────────────────────────
 
-def capture_init_payload(slug: str, scrolls: int = 30):
+class SessionBlocked(Exception):
+    """Cookies invalid / account checkpointed — stop instead of retrying."""
+
+
+def posts_in(bodies) -> dict:
+    found = {}
+    for body in bodies:
+        for obj in parse_lines(body):
+            for story in find_stories(obj):
+                post = extract_post(story)
+                if post:
+                    found[post["post_id"]] = post
+    return found
+
+
+def capture_init_payload(slug: str, scrolls: int = 30, known_ids=frozenset(), cutoff: float = 0):
     """Return (doc_id, variables, captured_bodies) or (None, None, bodies).
 
     captured_bodies includes the GraphQL responses the browser received while
@@ -219,7 +235,7 @@ def capture_init_payload(slug: str, scrolls: int = 30):
 
     requests_seen, bodies = [], []
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True, args=["--disable-blink-features=AutomationControlled"])
+        browser = p.chromium.launch(headless=HEADLESS, args=["--disable-blink-features=AutomationControlled"])
         ctx = browser.new_context(
             locale="zh-TW",
             viewport={"width": 1280, "height": 900},
@@ -248,6 +264,10 @@ def capture_init_payload(slug: str, scrolls: int = 30):
             time.sleep(1)
             page.goto(f"https://www.facebook.com/{slug}", timeout=60000, wait_until="domcontentloaded")
             time.sleep(3)
+            if load_fb_cookies() and re.search(r"/(checkpoint|login)", page.url):
+                DEBUG.mkdir(parents=True, exist_ok=True)
+                page.screenshot(path=str(DEBUG / f"{slug}_blocked.png"))
+                raise SessionBlocked(f"FB 要求登入或驗證（{page.url}）：cookies 失效或帳號被鎖，請重新登入後再匯出")
             # server-rendered JSON blobs (contain the first few posts)
             try:
                 blobs = page.eval_on_selector_all(
@@ -258,11 +278,26 @@ def capture_init_payload(slug: str, scrolls: int = 30):
             except Exception as e:  # noqa: BLE001
                 logging.warning("[%s] could not read page json: %s", slug, e)
             dismiss_login(page)
+            idle = 0
             for i in range(scrolls):
+                before = len(bodies)
                 page.mouse.wheel(0, 2500)
-                time.sleep(1.2)
+                time.sleep(1.5)
                 if i % 6 == 5:
                     dismiss_login(page)
+                idle = idle + 1 if len(bodies) == before else 0
+                seen = posts_in(bodies)
+                hit_known = known_ids & seen.keys()
+                stamps = [p["timestamp"] for p in seen.values() if p["timestamp"]]
+                if hit_known:
+                    logging.info("[%s] reached already-saved post %s; stop scrolling", slug, next(iter(hit_known)))
+                    break
+                if cutoff and stamps and min(stamps) < cutoff:
+                    logging.info("[%s] reached posts older than the cutoff; stop scrolling", slug)
+                    break
+                if idle >= 6:
+                    logging.info("[%s] nothing new after %d scrolls; stop", slug, idle)
+                    break
             time.sleep(2)
             DEBUG.mkdir(parents=True, exist_ok=True)
             page.screenshot(path=str(DEBUG / f"{slug}_screen.png"), full_page=False)
@@ -504,16 +539,13 @@ def scrape_page(slug: str, days: int) -> int:
         for p in json.loads(out_file.read_text(encoding="utf-8") or "[]"):
             existing[str(p.get("post_id"))] = p
 
-    doc_id, variables, bodies = capture_init_payload(slug)
+    logged_in = bool(load_fb_cookies())
+    cutoff = time.time() - days * 86400
+    doc_id, variables, bodies = capture_init_payload(
+        slug, scrolls=80 if logged_in else 30, known_ids=frozenset(existing), cutoff=cutoff)
 
-    found = {}
     # posts that came back during the browser session itself
-    for body in bodies:
-        for obj in parse_lines(body):
-            for story in find_stories(obj):
-                post = extract_post(story)
-                if post:
-                    found[post["post_id"]] = post
+    found = posts_in(bodies)
     logging.info("[%s] browser session: %d bodies, %d posts", slug, len(bodies), len(found))
     if not found:
         DEBUG.mkdir(parents=True, exist_ok=True)
@@ -529,8 +561,8 @@ def scrape_page(slug: str, days: int) -> int:
             (DEBUG / f"{slug}_body_with_post_id.txt").write_text(
                 max(with_posts, key=len)[:400000], encoding="utf-8")
 
-    if doc_id and load_fb_cookies():
-        logging.info("[%s] logged in: skipping anonymous API pagination", slug)
+    if logged_in:
+        logging.info("[%s] logged in: got posts by scrolling; skipping API/photos steps", slug)
     elif doc_id:
         logging.info("[%s] timeline doc_id=%s id=%s", slug, doc_id, variables.get("id"))
         found.update(api_paginate(slug, doc_id, variables, days))
@@ -538,7 +570,8 @@ def scrape_page(slug: str, days: int) -> int:
         logging.error("[%s] could not capture the timeline GraphQL request (login wall / blocked?)", slug)
 
     try:
-        for pid, post in scrape_photos(slug, max_photos=25, days=days).items():
+        photo_posts = {} if logged_in else scrape_photos(slug, max_photos=25, days=days)
+        for pid, post in photo_posts.items():
             found.setdefault(pid, post)
             if not found[pid].get("image_urls") and post["image_urls"]:
                 found[pid]["image_urls"] = post["image_urls"]
@@ -548,6 +581,8 @@ def scrape_page(slug: str, days: int) -> int:
     new_count = 0
     now = dt.datetime.now(dt.timezone.utc).isoformat()
     for pid, post in found.items():
+        if pid not in existing and post.get("timestamp") and post["timestamp"] < cutoff:
+            continue
         local = []
         if post["image_urls"]:
             img_dir.mkdir(parents=True, exist_ok=True)
@@ -575,7 +610,16 @@ def main():
     ap.add_argument("--page", help="page username/URL/id; comma or space separated")
     ap.add_argument("--pages-file", default=str(ROOT / "pages.txt"))
     ap.add_argument("--days", type=int, default=30, help="how many days back to collect")
+    ap.add_argument("--cookies", help="Cookie-Editor JSON export file (logged-in run, use on a home PC)")
+    ap.add_argument("--headful", action="store_true", help="show the browser window")
     args = ap.parse_args()
+
+    import os
+    global HEADLESS
+    HEADLESS = not args.headful
+    cookie_file = args.cookies or os.environ.get("FB_COOKIES_FILE")
+    if cookie_file:
+        os.environ["FB_COOKIES"] = Path(cookie_file).read_text(encoding="utf-8")
 
     setup_logging()
     pages = read_pages(args)
@@ -588,6 +632,10 @@ def main():
         logging.info("=== scraping %s ===", slug)
         try:
             total += scrape_page(slug, args.days)
+        except SessionBlocked as e:
+            logging.error("%s", e)
+            logging.error("停止執行，避免帳號被進一步鎖定")
+            break
         except Exception as e:  # noqa: BLE001
             logging.exception("[%s] failed: %s", slug, e)
     logging.info("ALL DONE: %d new posts across %d pages", total, len(pages))
