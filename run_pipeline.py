@@ -17,7 +17,7 @@ Options
   --days N         look back N days when scraping (default 30)
   --skip-scrape    only analyze + build
   --skip-analyze   only scrape + build
-  --provider/--model   LLM selection (default: anthropic / claude-haiku-5-5)
+  --provider/--model   LLM selection (default: claude-code, i.e. your Claude plan)
 """
 
 import argparse

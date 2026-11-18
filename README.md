@@ -38,13 +38,16 @@ python -m playwright install --with-deps chromium
 ```
 
 1. 用電腦的瀏覽器登入 FB **小號**，裝 Cookie-Editor → Export（JSON），存成 repo 根目錄的 `cookies.json`（已 gitignore）
-2. 設定分析用的 LLM 金鑰（擇一）：
+2. 分析用的語言模型（預設用你的 Claude 方案額度）：
    ```bash
-   export ANTHROPIC_API_KEY=...                          # 預設，模型 claude-haiku-5-5
-   # 或
-   export LLM_PROVIDER=gemini GEMINI_API_KEY=...         # 模型預設 gemini-flash-lite-latest
+   npm install -g @anthropic-ai/claude-code   # 安裝 Claude Code
+   claude                                     # 第一次執行，用你的 Claude 帳號登入，然後 /exit
    ```
-   要換模型：`export LLM_MODEL=...`
+   之後 pipeline 會用 `claude -p` 分析，用量算在你的方案裡，不用 API key。
+   **不要設定 `ANTHROPIC_API_KEY`**（pipeline 會自動忽略它，但你自己手動跑 `claude` 時它會改走 API 計費）。
+
+   想改用 API 的話：`export LLM_PROVIDER=anthropic ANTHROPIC_API_KEY=...`
+   或 `export LLM_PROVIDER=gemini GEMINI_API_KEY=...`；`LLM_MODEL` 可換模型。
 
 ### 執行
 

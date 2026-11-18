@@ -23,11 +23,15 @@ Exit code：`0` 成功 · `1` 有步驟出錯（看摘要）· `2` FB session �
 |---|---|---|
 | ① 爬蟲（登入） | `python scraper/fetch_posts.py --cookies cookies.json` | 30 天內新貼文；遇到已存過的貼文就停，不會重複 |
 | 查待分析 | `python analysis/pending.py` | 還沒有分析檔的貼文 |
-| ② 分析（LLM） | `python analysis/analyze.py` | 每篇一個分析檔；規範直接讀本檔「分析規範」一節，輸出不合格自動重試一次 |
+| ② 分析（LLM） | `python analysis/analyze.py` | 每篇一個分析檔；規範直接讀本檔「分析規範」一節（API 模式輸出不合格自動重試一次；Claude Code 模式由它自己跑 build_events 驗證） |
 | ② 分析（Claude 手動） | 在 Claude 工作階段依「分析規範」逐篇處理 | 同上 |
 | ③ 彙整 | `python analysis/build_events.py` | `schedule.json`（今天以後的賽事）、`events.json`（全部，重複合併）、`events.db`；驗證失敗 exit code 1 |
 
-分析用的模型：環境變數 `LLM_PROVIDER`（`anthropic` 預設／`gemini`）、`LLM_MODEL`，金鑰 `ANTHROPIC_API_KEY` 或 `GEMINI_API_KEY`。
+分析用的模型：環境變數 `LLM_PROVIDER`
+- `claude-code`（預設）：呼叫本機的 Claude Code（`claude -p`），用登入的 Claude 方案額度，不需要 API key。執行時會移除 `ANTHROPIC_API_KEY` 以免改走 API 計費
+- `anthropic`：需要 `ANTHROPIC_API_KEY`（API 另外計費）
+- `gemini`：需要 `GEMINI_API_KEY`
+- `LLM_MODEL` 可指定模型
 
 GitHub Actions **已暫停**（只剩手動、不登入的 Run workflow），正式流程不用它。
 
