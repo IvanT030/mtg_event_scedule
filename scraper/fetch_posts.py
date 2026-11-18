@@ -68,23 +68,25 @@ def page_slug(page: str) -> str:
     return page.strip("/")
 
 
-def read_pages(args) -> list[str]:
+def read_pages(args) -> list[tuple[str, str]]:
+    """Return [(slug, store_name)]. Store name = comment after # in pages.txt."""
     raw = []
     if args.page:
-        raw += [p for p in re.split(r"[,\s]+", args.page) if p]
+        raw += [(p, None) for p in re.split(r"[,\s]+", args.page) if p]
     elif Path(args.pages_file).exists():
         for line in Path(args.pages_file).read_text(encoding="utf-8").splitlines():
-            line = line.split("#", 1)[0].strip()
-            if line:
-                raw.append(line)
+            url, _, name = line.partition("#")
+            url = url.strip()
+            if url:
+                raw.append((url, name.strip() or None))
     slugs = []
-    for p in raw:
+    for p, name in raw:
         s = page_slug(p)
         if s.lower() in BAD_SLUGS:
             logging.error("無法使用的網址：%s —— 這是分享/貼文連結，請改用粉專首頁網址，"
                           "例如 https://www.facebook.com/cardmaster.tw/", p)
             continue
-        slugs.append(s)
+        slugs.append((s, name or s))
     return slugs
 
 
@@ -130,6 +132,7 @@ def extract_post(story: dict) -> dict | None:
     creation = None
     images, seen = [], set()
     url = None
+    links = []
     for path, k, v in walk(story):
         if text is None and k == "message" and isinstance(v, dict) and isinstance(v.get("text"), str):
             text = v["text"]
@@ -137,6 +140,10 @@ def extract_post(story: dict) -> dict | None:
             creation = v
         elif url is None and k in ("wwwURL", "url") and isinstance(v, str) and post_id in v:
             url = v
+        elif k in ("url", "external_url", "link_url") and isinstance(v, str) and v.startswith("http"):
+            ext = external_link(v)
+            if ext and ext not in links:
+                links.append(ext)
         elif k in ("photo_image", "viewer_image", "image", "large_share_image") and isinstance(v, dict):
             uri = v.get("uri")
             if (isinstance(uri, str) and "fbcdn" in uri
@@ -151,12 +158,41 @@ def extract_post(story: dict) -> dict | None:
     when = dt.datetime.fromtimestamp(creation, TZ_TW).isoformat() if creation else None
     return {
         "post_id": post_id,
-        "post_url": url or f"https://www.facebook.com/{post_id}",
+        "post_url": url,
         "time": when,
         "timestamp": creation,
         "text": text,
+        "links": merge_links(text, links),
         "image_urls": images,
     }
+
+
+URL_RE = re.compile(r"https?://[^\s<>\"'）)\]】]+")
+
+
+def external_link(u: str) -> str | None:
+    """Return a non-Facebook link (unwrapping l.facebook.com redirects), else None."""
+    from urllib.parse import urlparse, parse_qs as pq
+    host = urlparse(u).netloc.lower()
+    if host in ("l.facebook.com", "lm.facebook.com"):
+        target = (pq(urlparse(u).query).get("u") or [None])[0]
+        return external_link(target) if target else None
+    if "facebook.com" in host and "/events/" in u:   # FB event pages are useful
+        return u.split("?")[0]
+    if not host or "facebook.com" in host or "fbcdn" in host or host.endswith("fb.com") \
+            or "fbsbx" in host:
+        return None
+    return u
+
+
+def merge_links(text, links):
+    out = []
+    for u in URL_RE.findall(text or "") + links:
+        u = u.rstrip(".,，。!！")
+        ext = external_link(u) if "facebook.com" in u or "fb.com" in u else u
+        if ext and ext not in out:
+            out.append(ext)
+    return out
 
 
 def parse_lines(body: str):
@@ -436,6 +472,7 @@ def scrape_photos(slug: str, max_photos: int, days: int) -> dict:
                         "post_id": pid, "photo_fbid": fbid,
                         "post_url": f"https://www.facebook.com/photo/?fbid={fbid}",
                         "time": when, "timestamp": creation, "text": text,
+                        "links": merge_links(text, []),
                         "image_urls": [img] if img else [],
                     }
                     if creation and creation < cutoff:
@@ -529,10 +566,14 @@ def download_image(url: str, dest: Path) -> bool:
         return False
 
 
-def scrape_page(slug: str, days: int) -> int:
-    out_file = DATA / "posts" / f"{slug}.json"
-    img_dir = DATA / "images" / slug
-    out_file.parent.mkdir(parents=True, exist_ok=True)
+def scrape_page(slug: str, store: str, days: int) -> int:
+    store_dir = DATA / "stores" / slug
+    out_file = store_dir / "posts.json"
+    img_dir = store_dir / "images"
+    store_dir.mkdir(parents=True, exist_ok=True)
+    meta_file = store_dir / "store.json"
+    meta = json.loads(meta_file.read_text(encoding="utf-8")) if meta_file.exists() else {}
+    meta.update({"slug": slug, "name": store, "fb_url": f"https://www.facebook.com/{slug}"})
 
     existing = {}
     if out_file.exists():
@@ -561,6 +602,8 @@ def scrape_page(slug: str, days: int) -> int:
             (DEBUG / f"{slug}_body_with_post_id.txt").write_text(
                 max(with_posts, key=len)[:400000], encoding="utf-8")
 
+    if variables and variables.get("id"):
+        meta["page_id"] = str(variables["id"])
     if logged_in:
         logging.info("[%s] logged in: got posts by scrolling; skipping API/photos steps", slug)
     elif doc_id:
@@ -590,7 +633,9 @@ def scrape_page(slug: str, days: int) -> int:
             dest = img_dir / f"{pid}_{i}.jpg"
             if download_image(url, dest):
                 local.append(str(dest.relative_to(ROOT)))
-        post = {**post, "page": slug, "local_images": local, "scraped_at": now}
+        if not post.get("post_url"):
+            post["post_url"] = f"https://www.facebook.com/{slug}/posts/{pid}"
+        post = {**post, "page": slug, "store": store, "local_images": local, "scraped_at": now}
         post.pop("image_urls", None)
         if pid not in existing:
             new_count += 1
@@ -598,6 +643,8 @@ def scrape_page(slug: str, days: int) -> int:
 
     posts = sorted(existing.values(), key=lambda p: p.get("timestamp") or 0, reverse=True)
     out_file.write_text(json.dumps(posts, ensure_ascii=False, indent=2), encoding="utf-8")
+    meta["last_scraped_at"] = now
+    meta_file.write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
     logging.info("[%s] done: %d new, %d total", slug, new_count, len(posts))
     for p in posts[:5]:
         logging.info("   %s | imgs=%d | %s", p.get("time"), len(p.get("local_images") or []),
@@ -628,10 +675,10 @@ def main():
         return
 
     total = 0
-    for slug in pages:
-        logging.info("=== scraping %s ===", slug)
+    for slug, store in pages:
+        logging.info("=== scraping %s (%s) ===", slug, store)
         try:
-            total += scrape_page(slug, args.days)
+            total += scrape_page(slug, store, args.days)
         except SessionBlocked as e:
             logging.error("%s", e)
             logging.error("停止執行，避免帳號被進一步鎖定")

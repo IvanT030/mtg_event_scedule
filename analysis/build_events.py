@@ -1,4 +1,4 @@
-"""Validate data/analysis/**.json and build the event list.
+"""Validate data/stores/*/analysis/*.json and build the event list.
 
 Outputs:
     data/events.json   all MTG events, sorted by start time
@@ -16,7 +16,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-ANALYSIS = ROOT / "data" / "analysis"
+STORES = ROOT / "data" / "stores"
 EVENTS_JSON = ROOT / "data" / "events.json"
 EVENTS_DB = ROOT / "data" / "events.db"
 
@@ -25,7 +25,7 @@ FORMATS = {"Standard", "Pioneer", "Modern", "Legacy", "Vintage", "Pauper", "Comm
            "Duel Commander", "cEDH", "Draft", "Sealed", "Prerelease", "Two-Headed Giant",
            "Alchemy", "Historic", "Other", None}
 EVENT_FIELDS = ["title", "store", "address", "format", "event_type", "start", "end",
-                "registration_start", "fee", "prizes", "capacity", "notes", "confidence", "evidence"]
+                "registration_start", "fee", "prizes", "capacity", "links", "notes", "confidence", "evidence"]
 
 
 def validate(rec: dict, path: Path) -> list[str]:
@@ -51,6 +51,8 @@ def validate(rec: dict, path: Path) -> list[str]:
         c = e.get("confidence")
         if not isinstance(c, (int, float)) or not 0 <= c <= 1:
             errs.append(f"events[{i}].confidence must be 0..1")
+        if not isinstance(e.get("links", []), list):
+            errs.append(f"events[{i}].links must be a list")
         if e.get("fee") is not None and not isinstance(e["fee"], int):
             errs.append(f"events[{i}].fee must be an integer (TWD) or null")
     return errs
@@ -58,7 +60,10 @@ def validate(rec: dict, path: Path) -> list[str]:
 
 def main():
     records, problems = [], []
-    for f in sorted(ANALYSIS.glob("*/*.json")):
+    store_names = {}
+    for meta in STORES.glob("*/store.json"):
+        store_names[meta.parent.name] = json.loads(meta.read_text(encoding="utf-8")).get("name")
+    for f in sorted(STORES.glob("*/analysis/*.json")):
         try:
             rec = json.loads(f.read_text(encoding="utf-8"))
         except json.JSONDecodeError as e:
@@ -66,7 +71,7 @@ def main():
             continue
         errs = validate(rec, f)
         problems += [f"{f.relative_to(ROOT)}: {e}" for e in errs]
-        rec["_page"] = f.parent.name
+        rec["_page"] = f.parent.parent.name
         records.append(rec)
 
     events = []
@@ -75,7 +80,8 @@ def main():
             continue
         for i, e in enumerate(rec.get("events") or []):
             events.append({"event_id": f"{rec['post_id']}#{i}", "post_id": rec["post_id"],
-                           "page": rec["_page"], "source_url": rec.get("post_url"),
+                           "page": rec["_page"], "store_page_name": store_names.get(rec["_page"]),
+                           "source_url": rec.get("post_url"),
                            **{k: e.get(k) for k in EVENT_FIELDS}})
     events.sort(key=lambda e: e["start"] or "")
     EVENTS_JSON.write_text(json.dumps(events, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -86,11 +92,11 @@ def main():
     db.execute("""CREATE TABLE posts_analyzed (post_id TEXT PRIMARY KEY, page TEXT, post_url TEXT,
                   post_time TEXT, is_mtg INTEGER, reason TEXT, analyzed_at TEXT)""")
     db.execute(f"""CREATE TABLE events (event_id TEXT PRIMARY KEY, post_id TEXT, page TEXT,
-                  source_url TEXT, {', '.join(k + ' TEXT' for k in EVENT_FIELDS)})""")
+                  store_page_name TEXT, source_url TEXT, {', '.join(k + ' TEXT' for k in EVENT_FIELDS)})""")
     db.executemany("INSERT INTO posts_analyzed VALUES (?,?,?,?,?,?,?)", [
         (r["post_id"], r["_page"], r.get("post_url"), r.get("post_time"), int(bool(r.get("is_mtg"))),
          r.get("reason"), r.get("analyzed_at")) for r in records])
-    cols = ["event_id", "post_id", "page", "source_url"] + EVENT_FIELDS
+    cols = ["event_id", "post_id", "page", "store_page_name", "source_url"] + EVENT_FIELDS
     db.executemany(f"INSERT INTO events VALUES ({','.join('?' * len(cols))})", [
         tuple(json.dumps(e[c], ensure_ascii=False) if isinstance(e[c], (list, dict)) else e[c]
               for c in cols) for e in events])

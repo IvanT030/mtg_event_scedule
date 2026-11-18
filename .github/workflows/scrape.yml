@@ -15,7 +15,7 @@ on:
     branches: [main]
     paths: ["pages.txt", "scraper/**", ".github/workflows/scrape.yml"]
   schedule:
-    - cron: "17 22 * * *"   # 每天台灣時間 06:17
+    - cron: "17 */3 * * *"   # 每 3 小時（台灣時間 02:17、05:17、08:17…）
 
 permissions:
   contents: write

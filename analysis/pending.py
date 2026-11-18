@@ -1,6 +1,6 @@
 """List posts that have not been analyzed yet.
 
-A post is "analyzed" once data/analysis/<page>/<post_id>.json exists
+A post is "analyzed" once data/stores/<slug>/analysis/<post_id>.json exists
 (for MTG and non-MTG posts alike).
 
 Usage:
@@ -13,23 +13,26 @@ import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-POSTS = ROOT / "data" / "posts"
-ANALYSIS = ROOT / "data" / "analysis"
+STORES = ROOT / "data" / "stores"
 
 
 def pending():
     out = []
-    for f in sorted(POSTS.glob("*.json")):
-        page = f.stem
+    for f in sorted(STORES.glob("*/posts.json")):
+        page = f.parent.name
         for p in json.loads(f.read_text(encoding="utf-8") or "[]"):
             pid = str(p.get("post_id"))
-            if not (ANALYSIS / page / f"{pid}.json").exists():
+            out_path = f.parent / "analysis" / f"{pid}.json"
+            if not out_path.exists():
                 out.append({
                     "page": page,
+                    "store": p.get("store"),
+                    "analysis_file": str(out_path.relative_to(ROOT)),
                     "post_id": pid,
                     "time": p.get("time"),
                     "post_url": p.get("post_url"),
                     "text": p.get("text"),
+                    "links": p.get("links") or [],
                     "local_images": p.get("local_images") or [],
                 })
     out.sort(key=lambda p: p["time"] or "")
@@ -47,7 +50,7 @@ def main():
     print(f"{len(items)} post(s) waiting for analysis")
     for p in items:
         head = (p["text"] or "").replace("\n", " ")[:50]
-        print(f"- {p['page']}/{p['post_id']}  {p['time']}  imgs={len(p['local_images'])}  {head}")
+        print(f"- [{p['store']}] {p['post_id']}  {p['time']}  imgs={len(p['local_images'])}  {head}")
 
 
 if __name__ == "__main__":

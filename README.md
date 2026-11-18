@@ -4,11 +4,13 @@
 
 ## 結構
 
-- `pages.txt`：要爬的粉專清單
+- `pages.txt`：要爬的粉專清單（`#` 後面寫店名）
 - `scraper/fetch_posts.py`：爬蟲（Playwright，不需登入）
-- `.github/workflows/scrape.yml`：GitHub Actions，每天自動跑，也可手動執行
-- `data/posts/<粉專>.json`：抓到的貼文
-- `data/images/<粉專>/`：貼文圖片
+- `.github/workflows/scrape.yml`：GitHub Actions，每 3 小時自動跑，也可手動執行
+- `data/stores/<粉專>/posts.json`：抓到的貼文（含貼文連結與內文中的外部連結）
+- `data/stores/<粉專>/images/`：貼文圖片
+- `data/stores/<粉專>/analysis/`：分析結果
+- `data/events.json`、`data/events.db`：彙整後的 MTG 賽事
 - `data/last_run.log`：最近一次執行紀錄
 
 ## 手動執行
