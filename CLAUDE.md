@@ -7,24 +7,39 @@
 ```
 ① 爬蟲 ──► data/stores/<粉專>/posts.json + images/ + store.json
 ② 分析 ──► data/stores/<粉專>/analysis/<post_id>.json   （每篇一個檔，MTG 與非 MTG 都寫）
-③ 彙整 ──► data/events.json + data/events.db
+③ 彙整 ──► data/schedule.json（給前端） + data/events.json + data/events.db
 ```
 
-| 步驟 | 在哪裡跑 | 怎麼跑 | 得到什麼 |
-|---|---|---|---|
-| ① 爬蟲（不登入） | GitHub Actions | 每 3 小時自動（UTC 的 :17 分）；或改 `pages.txt`／`scraper/**` 推上去；或 Actions → Scrape FB posts → Run workflow | 最新 1～4 篇（GitHub IP 被 FB 限流，時好時壞） |
-| ① 爬蟲（登入） | 你的電腦（WSL，家用網路） | `python scraper/fetch_posts.py --cookies cookies.json` 再 `git push` | 30 天內所有新貼文，遇到已存過的貼文就停 |
-| 查待分析 | 任何地方 | `python analysis/pending.py` | 列出還沒有分析檔的貼文 |
-| ② 分析 | Claude 工作階段（排程任務或手動） | 依照下方「分析規範」逐篇處理 | `data/stores/<粉專>/analysis/<post_id>.json` |
-| ③ 彙整 | 任何地方 | `python analysis/build_events.py` | `data/events.json`、`data/events.db`；驗證失敗會列出錯誤並以 exit code 1 結束 |
+**正式流程**：網站後端每天在本機（家用網路，WSL）呼叫一次
+
+```bash
+python run_pipeline.py --cookies cookies.json
+```
+
+①→②→③ 一次跑完，stdout 輸出一個 JSON 摘要（log 在 stderr 與 `data/last_run.log`）。
+Exit code：`0` 成功 · `1` 有步驟出錯（看摘要）· `2` FB session 被擋（要重新登入匯出 cookies）· `3` 已有另一個執行中。
+
+| 步驟 | 單獨執行 | 得到什麼 |
+|---|---|---|
+| ① 爬蟲（登入） | `python scraper/fetch_posts.py --cookies cookies.json` | 30 天內新貼文；遇到已存過的貼文就停，不會重複 |
+| 查待分析 | `python analysis/pending.py` | 還沒有分析檔的貼文 |
+| ② 分析（LLM） | `python analysis/analyze.py` | 每篇一個分析檔；規範直接讀本檔「分析規範」一節，輸出不合格自動重試一次 |
+| ② 分析（Claude 手動） | 在 Claude 工作階段依「分析規範」逐篇處理 | 同上 |
+| ③ 彙整 | `python analysis/build_events.py` | `schedule.json`（今天以後的賽事）、`events.json`（全部，重複合併）、`events.db`；驗證失敗 exit code 1 |
+
+分析用的模型：環境變數 `LLM_PROVIDER`（`anthropic` 預設／`gemini`）、`LLM_MODEL`，金鑰 `ANTHROPIC_API_KEY` 或 `GEMINI_API_KEY`。
+
+GitHub Actions **已暫停**（只剩手動、不登入的 Run workflow），正式流程不用它。
 
 ## 目錄
 
 - `pages.txt` — 要爬的粉專，一行一個，`#` 後面寫店名（會成為 `store` 欄位與 `store.json` 的 `name`）。用粉專首頁網址，不要用 `facebook.com/share/...` 分享連結
+- `run_pipeline.py` — 後端呼叫的入口：爬蟲 → 分析 → 彙整
 - `scraper/fetch_posts.py` — 爬蟲（Playwright；不登入時另試 GraphQL API 與相簿頁）
-- `.github/workflows/scrape.yml` — GitHub Actions 排程
+- `analysis/analyze.py` — 用 LLM 分析待分析貼文（文字＋圖片）
+- `.github/workflows/scrape.yml` — GitHub Actions（已暫停，只能手動）
 - `analysis/pending.py` — 列出待分析貼文
-- `analysis/build_events.py` — 驗證分析檔並產生 events.json / events.db
+- `analysis/build_events.py` — 驗證分析檔並產生 schedule.json / events.json / events.db
 - `data/stores/<粉專>/` — 每家店一個資料夾：
   - `store.json` — 店名、粉專網址、page_id、最後爬取時間
   - `posts.json` — 貼文（爬蟲維護，不要手動改）
@@ -113,15 +128,26 @@ MTG（`events` 是陣列，一篇可能有多場，例如一週賽程表）：
 - **evidence**：資訊從哪裡讀到的，`"text"`、`"image"` 或兩者都有
 - **不可編造**貼文與圖片裡沒有的資訊；不知道就 `null`
 
-### 分析完之後
+### 給前端的 data/schedule.json
+```json
+{ "generated_at": "...", "count": 1,
+  "events": [ { "event_id", "title", "store", "address", "format", "event_type", "start", "end",
+                "registration_start", "fee", "prizes", "capacity", "links", "notes",
+                "source_url", "also_posted_in", "page", "store_page_name", "needs_review" } ] }
+```
+- 只含 `start` 在今天（台灣時間）以後的賽事，依 `start` 排序
+- 同一家店、同一 `start`、`format`、`event_type` 的賽事視為重複：保留信心最高的，`links` 合併，其他貼文連結列在 `also_posted_in`
+- `needs_review`：`confidence` < 0.7，前端可標示「待確認」
+
+### 分析完之後（Claude 手動分析時）
 1. `python analysis/build_events.py`，要通過驗證（exit code 0）；失敗就修正分析檔
-2. `git pull --rebase` 後提交：`data/stores/*/analysis/`、`data/events.json`、`data/events.db`
+2. `git pull --rebase` 後提交：`data/stores/*/analysis/`、`data/schedule.json`、`data/events.json`、`data/events.db`
 3. commit 訊息：`analysis: N posts (M MTG events)`
 4. 回報：分析了幾篇、找到哪些 MTG 賽事（日期、店家、賽制）、低信心需要人工確認的項目
 
 ## 注意事項
 
-- **不要在 GitHub Actions 或任何雲端環境使用 FB cookies**：會被 FB 判定盜用並鎖住帳號（已經發生過）
+- **不要在 GitHub Actions 或任何雲端環境使用 FB cookies**：會被 FB 判定盜用並鎖住帳號（已經發生過）。網站後端若部署到雲端主機（VPS 等），同樣會被鎖，爬蟲必須留在家用網路的電腦上跑
 - `cookies.json`、`data/debug/` 都在 .gitignore，絕不可提交
-- 爬蟲的 `data/` commit 由 github-actions[bot] 自動產生，推送前先 `git pull --rebase`
+- `data/.pipeline.lock` 是執行鎖（已 gitignore）；超過 2 小時的舊鎖會自動接手
 - `data/stores/*/posts.json` 由爬蟲維護，分析時不要修改

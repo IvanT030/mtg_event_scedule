@@ -4,3 +4,4 @@ __pycache__/
 data/debug/
 cookies*.json
 *.cookies.json
+data/.pipeline.lock

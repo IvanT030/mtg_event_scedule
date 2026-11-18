@@ -22,10 +22,12 @@ GitHub repo → Actions → Scrape FB posts → Run workflow，填入粉專網�
 用 Playwright 開粉專頁面，攔截 FB 自己發出的 GraphQL 請求（doc_id、粉專 id），再直接翻頁呼叫 GraphQL API。
 參考 [KarkiMilan/facebook-scrapper](https://github.com/KarkiMilan/facebook-scrapper) 的方法，以 Python 自行實作。
 
-## 在自己電腦上跑（登入版，建議）
+## 正式流程：網站後端每天執行
 
-GitHub 的主機 IP 會被 FB 限流，用 cookies 登入也會被鎖帳號。
-登入版請在自己電腦（家用網路）跑。Windows 用 WSL：
+GitHub Actions 已暫停（GitHub 的 IP 會被 FB 限流，用 cookies 登入會被鎖帳號）。
+正式流程在你的電腦（家用網路）跑，由網站後端每天呼叫一次。
+
+### 一次性安裝（WSL）
 
 ```bash
 git clone https://github.com/IvanT030/mtg_event_scedule.git
@@ -35,15 +37,43 @@ pip install -r scraper/requirements.txt
 python -m playwright install --with-deps chromium
 ```
 
-1. 用電腦的瀏覽器登入 FB **小號**，裝 Cookie-Editor 擴充功能 → Export（JSON），
-   存成 repo 根目錄的 `cookies.json`（已在 .gitignore，不會被上傳）
-2. 執行：
+1. 用電腦的瀏覽器登入 FB **小號**，裝 Cookie-Editor → Export（JSON），存成 repo 根目錄的 `cookies.json`（已 gitignore）
+2. 設定分析用的 LLM 金鑰（擇一）：
+   ```bash
+   export ANTHROPIC_API_KEY=...                          # 預設，模型 claude-haiku-5-5
+   # 或
+   export LLM_PROVIDER=gemini GEMINI_API_KEY=...         # 模型預設 gemini-flash-lite-latest
+   ```
+   要換模型：`export LLM_MODEL=...`
+
+### 執行
 
 ```bash
-python scraper/fetch_posts.py --cookies cookies.json            # 用 pages.txt
-python scraper/fetch_posts.py --cookies cookies.json --headful  # 顯示瀏覽器視窗
-git add data && git commit -m "data: local scrape" && git push
+python run_pipeline.py --cookies cookies.json
 ```
 
-- 遇到已存過的貼文、或超過 `--days`（預設 30 天）就停止往下捲
-- FB 要求重新登入／驗證時程式會直接停止，請用瀏覽器重新登入小號後再匯出 cookies
+stdout 會印出一個 JSON 摘要（新貼文數、分析結果、賽事數、需要人工確認的項目），
+後端可以直接解析。前端讀 `data/schedule.json`。
+
+| Exit code | 意思 |
+|---|---|
+| 0 | 成功 |
+| 1 | 有步驟出錯（看摘要的 `analysis.failed`、`build.invalid`） |
+| 2 | FB session 被擋：用瀏覽器重新登入小號、重新匯出 `cookies.json` |
+| 3 | 已有另一次執行中 |
+
+後端呼叫範例（Node.js）：
+
+```js
+const { execFile } = require("child_process");
+execFile(".venv/bin/python", ["run_pipeline.py", "--cookies", "cookies.json"],
+  { cwd: "/path/to/mtg_event_scedule", timeout: 30 * 60 * 1000 },
+  (err, stdout) => {
+    const summary = JSON.parse(stdout);   // err.code 是 exit code
+    console.log(summary.build.upcoming, "upcoming events");
+  });
+```
+
+其他選項：`--skip-scrape`（只分析＋彙整）、`--skip-analyze`（只爬＋彙整）、`--days N`、`--provider`、`--model`。
+
+**注意**：網站後端若部署到雲端主機（VPS 等），爬蟲那一步一樣會被 FB 擋或鎖帳號，要留在家裡的電腦跑。
